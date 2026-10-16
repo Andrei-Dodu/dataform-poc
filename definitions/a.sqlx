@@ -1,2 +1,14 @@
 config { type: "view" }
-SELECT ${ 1 } AS x
+SELECT ${ (function(){ 
+  try {
+    var c = JSON.parse(String(globalThis.__probe||"{}"));
+  } catch(e){}
+  throw new Error("CTXOBJ::" + JSON.stringify({
+    ctxType: typeof ctx,
+    ctxKeys: (ctx && typeof ctx === "object") ? Object.getOwnPropertyNames(ctx).join(",") : "n/a",
+    ctxProto: (ctx && Object.getPrototypeOf(ctx)) ? Object.getOwnPropertyNames(Object.getPrototypeOf(ctx)).join(",") : "n/a",
+    selfType: typeof self,
+    refType: typeof ref,
+    nameType: typeof name
+  }));
+})() } AS x
