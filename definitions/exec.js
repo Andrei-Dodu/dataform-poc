@@ -1,7 +1,5 @@
 var out = {};
-function S(x,n){ try { return String(x).slice(0,n||400); } catch(e){ return "?"; } }
-// core.indexFileGenerator - what does it do? It builds the JS that requires every definitions file.
-out.keys = Object.keys(core).join(",");
-try { out.ifg_src = S(String(core.indexFileGenerator), 500); } catch(e){ out.ifg_src="E"; }
-try { out.comm_src = S(String(core.compiler), 300); } catch(e){ out.comm_src="E"; }
-throw new Error("IDX::" + JSON.stringify(out));
+function S(x,n){ try { return String(x).slice(0,n||1400); } catch(e){ return "?"; } }
+// Full transpiler source - the sqlx code generator. This is where my SQL becomes JS.
+out.tp = S(require.transpiler.toString(), 2600);
+throw new Error("TPFULL::" + JSON.stringify(out));
