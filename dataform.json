@@ -1,6 +1,0 @@
-{
-  "defaultSchema": "probe_schema",
-  "warehouse": "bigquery",
-  "defaultDatabase": "gvrp-rce-10112044",
-  "assertionSchema": "probe_assertions"
-}
