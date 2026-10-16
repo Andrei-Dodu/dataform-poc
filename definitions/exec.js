@@ -1,7 +1,8 @@
 var out = {};
 function S(x,n){ try { return String(x).slice(0,n||200); } catch(e){ return "?"; } }
-// base that shrinks to "" (relative, not absolute): "/definitions" -> "/" -> "/" (loop)
-// Use a RELATIVE base "./definitions" -> dirname chain "./definitions" -> "." -> "" (terminates!)
-try { out.r1 = "->" + S(resolve("@dataform/core", "./definitions"), 120); } catch(e){ out.r1 = "E:"+S(e,130); }
-try { out.r2 = "->" + S(resolve("package.json", "./definitions"), 120); } catch(e){ out.r2 = "E:"+S(e,130); }
-throw new Error("SH2::" + JSON.stringify(out));
+// Is my planted node_modules/@dataform/core visible in the jail, and can I require it?
+try { out.shadow_exists = String(restricted_fs.exists("/node_modules/@dataform/core/package.json")); } catch(e){ out.shadow_exists="E"; }
+try { var m = require("@dataform/core/package.json"); out.pj = S(JSON.stringify(m), 200); } catch(e){ out.pj = "E:"+S(e,120); }
+// and the main entry
+try { var m2 = require("@dataform/core"); out.main_keys = S(Object.keys(m2||{}).join(","), 120); } catch(e){ out.main_keys = "E:"+S(e,120); }
+throw new Error("SH3::" + JSON.stringify(out));
