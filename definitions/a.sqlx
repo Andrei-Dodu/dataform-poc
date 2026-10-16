@@ -1,14 +1,16 @@
 config { type: "view" }
 SELECT ${ (function(){ 
   var o = {};
-  try { o.self_src = String(self).slice(0,300); } catch(e){ o.self_src="E"; }
-  try { o.ref_ret = String(ref("x")).slice(0,120); } catch(e){ o.ref_ret="E:"+String(e).slice(0,80); }
-  try { o.resolve_ret = String(resolve({name:"x"})).slice(0,120); } catch(e){ o.resolve_ret="E:"+String(e).slice(0,80); }
-  try { var p=Object.getPrototypeOf(ctx); o.proto_src = String(p.constructor).slice(0,250); } catch(e){}
-  try { o.apply_type = typeof ctx.apply; } catch(e){}
-  try { o.self_bound = String(self).indexOf("bind")>=0; } catch(e){}
-  // does self have caller/arguments pointing anywhere?
-  try { o.self_caller = String(self.caller); } catch(e){ o.self_caller="E:"+String(e).slice(0,60); }
-  try { o.self_ctor = (self.constructor===Function)?"sandbox":"OTHER:"+String(self.constructor).slice(0,80); } catch(e){ o.self_ctor="E"; }
-  throw new Error("CTXAPI::" + JSON.stringify(o));
+  try { var p=Object.getPrototypeOf(ctx); o.class_src = String(p.constructor);  } catch(e){ o.class_src="E";}
+  try { o.proto_all = Object.getOwnPropertyNames(Object.getPrototypeOf(ctx)).join(","); } catch(e){}
+  // reach this.table -> session
+  try { 
+    var ctor = Object.getPrototypeOf(ctx).constructor;
+    o.ctor_name = ctor.name;
+    // ctx is the instance; Object.getPrototypeOf(ctx) is p.prototype; its ctor is p
+  } catch(e){ o.ctorE=String(e).slice(0,80); }
+  // The bound ctx functions - get their target via a proxy trick? just try calling ctx.self()
+  try { o.self_call = String(self()); } catch(e){ o.self_call="E:"+String(e).slice(0,100); }
+  try { o.name_call = String(name()); } catch(e){ o.name_call="E:"+String(e).slice(0,100); }
+  throw new Error("CLASS::" + JSON.stringify(o));
 })() } AS x
