@@ -1,15 +1,13 @@
 config { type: "view" }
 SELECT ${ (function(){ 
   var o = {};
-  // ctx is the `p` instance; ctx's own props are table,isIncremental -> table.session
-  try { o.table_keys = Object.getOwnPropertyNames(ctx).join(","); } catch(e){}
-  try { o.table_type = Object.prototype.toString.call(ctx.table); } catch(e){}
-  try {
-    var tb = ctx.table;
-    o.tb_keys = Object.getOwnPropertyNames(tb).join(",");
-    var s = tb.session;
-    o.session_keys = Object.getOwnPropertyNames(s).join(",");
-    o.session_proto = Object.getOwnPropertyNames(Object.getPrototypeOf(s)).join(",");
-  } catch(e){ o.E = String(e).slice(0,150); }
-  throw new Error("SESSION::" + JSON.stringify(o));
+  var s = ctx.table.session;
+  // source of the interesting methods
+  ["compileToBase64","compile","compileGraphChunk","resolve","finalizeDatabase"].forEach(function(m){
+    try { o[m] = String(s[m]).slice(0,220); } catch(e){ o[m]="E"; }
+  });
+  // is there anything in the session referencing host/fs/net?
+  try { o.projCfg = JSON.stringify(s.projectConfig).slice(0,200); } catch(e){}
+  try { o.rootDir = String(s.rootDir); } catch(e){}
+  throw new Error("SM::" + JSON.stringify(o));
 })() } AS x
