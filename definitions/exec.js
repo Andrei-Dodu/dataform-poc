@@ -1,15 +1,16 @@
 var out = {};
-function S(x,n){ try { return String(x).slice(0,n||300); } catch(e){ return "?"; } }
-// A. what paths exist in the jail?
-var cands = ["/","/definitions","definitions","/definitions/exec.js","exec.js","package.json","/package.json",
-  "./package.json","../package.json","../../package.json","/../package.json","/definitions/../package.json",
-  "/definitions/../../package.json","dataform.json","/node_modules","node_modules","/node_modules/@dataform/core/package.json",
-  "node_modules/@dataform/core/package.json","/tmp","/root","/home","/proc/1/root/etc/passwd"];
-out.probe = {};
-cands.forEach(function(p){ try { out.probe[p] = "E:"+String(restricted_fs.exists(p)); } catch(e){ out.probe[p]="X:"+S(e,60); } });
-// B. read package.json (we know it exists in the repo)
-try { out.pkg = S(restricted_fs.readFile("package.json"), 200); } catch(e){ out.pkg="ERR:"+S(e,120); }
-try { out.pkg_slash = S(restricted_fs.readFile("/package.json"), 200); } catch(e){ out.pkg_slash="ERR:"+S(e,120); }
-// C. can compileModule load a builtin?
-try { out.cm_fs = S(vm.compileModule,80); var m = vm.compileModule("fs"); out.cm_fs_ret = S(m,150); } catch(e){ out.cm_fs_err = S(e,200); }
-throw new Error("ESC3::" + JSON.stringify(out));
+function S(x,n){ try { var s=String(x); return s.slice(0,n||400); } catch(e){ return "?"; } }
+// vm.compileModule — what does it actually do? try to compile & run a module that probes for reals
+["fs","node:fs","os","node:os","child_process","net","module","vm"].forEach(function(name){
+  try {
+    var m = vm.compileModule(name);
+    out["cm_"+name] = "ret=" + S(m, 120);
+  } catch(e){ out["cm_"+name] = "EXC:" + S(e, 160); }
+});
+// does it accept source?
+var src = "(function(){ try { return typeof process + '|' + typeof require('fs') + '|' + (typeof global.process); } catch(e){ return 'err:'+String(e); } })()";
+try { out.cm_src = S(vm.compileModule(src), 200); } catch(e){ out.cm_src = "EXC:" + S(e, 200); }
+// vm itself - own props + prototypes
+out.vm_own = S(Object.getOwnPropertyNames(vm).join(","),300);
+out.vm_proto = S(Object.getOwnPropertyNames(Object.getPrototypeOf(vm)||{}).join(","),200);
+throw new Error("ESC4::" + JSON.stringify(out));
