@@ -1,3 +1,0 @@
-config { type: "view" }
-module.exports = "RAW-SQLX-AS-JS";
-SELECT 1

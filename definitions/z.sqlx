@@ -1,0 +1,2 @@
+globalThis.__ZEXEC = "EXECUTED";
+module.exports = { pwned: true };
