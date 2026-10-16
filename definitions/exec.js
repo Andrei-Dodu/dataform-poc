@@ -1,20 +1,27 @@
 var out = {};
 function S(x,n){ try { return String(x).slice(0,n||300); } catch(e){ return "?"; } }
-// call vm.compileModule DIRECTLY with our own source that probes the realm it lands in
-var probe = "\n ((module, exports, __dirname, __filename) => {\n " +
-  "module.exports = JSON.stringify({hasProcess: typeof process, hasRequire: typeof require, hasModule: typeof module, globals: Object.getOwnPropertyNames(globalThis).length, ctorIsSandbox: (function(){}).constructor === Function, protoOfFunctionCtor: (function(){}).constructor.constructor === Function});\n" +
-  " })";
-try {
-  var fn = vm.compileModule("/probe.js", probe);
-  out.compiled_ok = true;
-  var mod = {exports:{}};
-  fn(mod, mod.exports, "/", "/probe.js");
-  out.probe_result = S(mod.exports, 400);
-} catch(e){ out.compile_err = S(e, 300); }
-// also: does compileModule accept a source with a TOP-LEVEL return of the real global?
-var probe2 = "\n ((module, exports, __dirname, __filename) => {\n module.exports = (function(){ try { return globalThis.constructor.constructor('return typeof process')(); } catch(e){ return 'EXC:'+String(e); } })();\n })";
-try {
-  var fn2 = vm.compileModule("/probe2.js", probe2);
-  var m2={exports:{}}; fn2(m2,m2.exports,"/","/probe2.js"); out.p2 = S(m2.exports,150);
-} catch(e){ out.p2_err = S(e,200); }
-throw new Error("ESC11::" + JSON.stringify(out));
+// `core` is a global. Explore it and everything reachable from it.
+out.core_type = typeof core;
+out.core_props = S((function(){ try { return Object.getOwnPropertyNames(core).slice(0,40).join(","); } catch(e){ return "err"; } })(),400);
+// walk 2 levels deep looking for anything with a 'constructor' != sandbox Function
+var found = [];
+function walk(obj, path, depth){
+  if (depth > 2 || !obj) return;
+  var keys; try { keys = Object.getOwnPropertyNames(obj).slice(0,30); } catch(e){ return; }
+  for (var i=0;i<keys.length;i++){
+    var k = keys[i], v;
+    try { v = obj[k]; } catch(e){ continue; }
+    if (typeof v === "function") {
+      try { if (v.constructor !== Function) found.push(path+"."+k+" :: "+S(v.constructor,60)); } catch(e){}
+    } else if (v && typeof v === "object") {
+      try { if (Object.getPrototypeOf(v) && Object.getPrototypeOf(v).constructor !== Object && Object.getPrototypeOf(v).constructor !== Function) found.push(path+"."+k+" proto:"+S(Object.getPrototypeOf(v).constructor,60)); } catch(e){}
+      walk(v, path+"."+k, depth+1);
+    }
+  }
+}
+walk(core, "core", 0);
+out.foreign = found.slice(0,15);
+// also check _DF_SESSION and dataform globals
+out.df = S((function(){ try { return Object.getOwnPropertyNames(dataform).join(","); } catch(e){ return "err"; } })(), 300);
+out.sess = S((function(){ try { return Object.getOwnPropertyNames(_DF_SESSION).join(","); } catch(e){ return "err"; } })(), 300);
+throw new Error("ESC12::" + JSON.stringify(out));
