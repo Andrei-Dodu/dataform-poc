@@ -1,5 +1,0 @@
-config { type: "view" }
-SELECT 'i_${ (function(){
-  try { ctx.table.session.publish("from_repo_sql_literal").query(function(){ return "SELECT 1 AS x"; }); } catch(e){}
-  return "ok";
-})() }_j' AS probe
