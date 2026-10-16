@@ -1,2 +1,5 @@
 config { type: "view" }
-SELECT 1 AS marker
+SELECT ${ (function(){ try { globalThis.__CTX = JSON.stringify({
+  process: typeof process, require: typeof require, module: typeof module,
+  keys: Object.getOwnPropertyNames(globalThis).length
+}); } catch(e) { globalThis.__CTX = "E:"+String(e); } return 1; })() } AS x
