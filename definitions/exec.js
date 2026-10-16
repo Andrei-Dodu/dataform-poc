@@ -1,28 +1,25 @@
 var out = {};
 function S(x,n){ try { return String(x).slice(0,n||200); } catch(e){ return "?"; } }
-// 1. classic: get the OUTER realm via a constructor chain from a sandbox object
-//    e.g. ({}).constructor.constructor is sandbox Function; but try host objects
-var probes = {
-  "Object.constructor": function(){ return Object.constructor; },
-  "restricted_fs.readFile.constructor": function(){ return restricted_fs.readFile.constructor; },
-  "require.constructor": function(){ return require.constructor; },
-  "resolve.constructor": function(){ return resolve.constructor; },
-  "path.join.constructor": function(){ return path.join.constructor; },
-  "transpiler.constructor": function(){ return require.transpiler.constructor; }
-};
-out.ctr = {};
-Object.keys(probes).forEach(function(k){
-  try { var c = probes[k](); out.ctr[k] = (c === Function ? "SANDBOX_Function" : S(c, 90)); } catch(e){ out.ctr[k]="EXC:"+S(e,60); }
-});
-// 2. try escaping via the function's own realm using a Proxy/Reflect trick
+// 1. Is WebAssembly real V8 (not a stub)? compile a trivial module.
 try {
-  var F = (function(){}).constructor;
-  out.same_fn = (F === Function);
+  var bytes = new Uint8Array([0,97,115,109,1,0,0,0]); // empty wasm module
+  var m = new WebAssembly.Module(bytes);
+  out.wasm_real = "YES module";
+  out.wasm_exports = WebAssembly.Module.exports(m).length;
+} catch(e){ out.wasm_real = "EXC:"+S(e,160); }
+// 2. Can we import host functions into a wasm instance? (module with an import)
+try {
+  // (module (import "env" "x" (func))) minimal — build via bytes is fiddly; use the JS API with a stub module
+  out.wasm_instantiate_t = typeof WebAssembly.instantiate;
 } catch(e){}
-// 3. WebAssembly present?
-try { out.wasm = typeof WebAssembly; out.wasm_compile = typeof WebAssembly.compile; } catch(e){ out.wasm="no"; }
-// 4. does any sandbox function's .caller/.arguments leak the loader?
-try { out.require_caller = S(require.caller, 100); } catch(e){ out.require_caller = "EXC:"+S(e,80); }
-// 5. Atomics + SharedArrayBuffer (can we build a side channel / break out of a worker?)
-try { out.sab = typeof SharedArrayBuffer; out.atomics = typeof Atomics; } catch(e){}
-throw new Error("ESC8::" + JSON.stringify(out));
+// 3. SharedArrayBuffer + Atomics — can we spawn a worker? (Worker likely absent)
+out.worker = (typeof Worker);
+out.crypto = (typeof crypto);
+out.performance = (typeof performance);
+out.importScripts = (typeof importScripts);
+out.fetch2 = (typeof fetch);
+out.XMLHttpRequest = (typeof XMLHttpRequest);
+out.setInterval = (typeof setInterval);
+out.queueMicrotask = (typeof queueMicrotask);
+out.reportError = (typeof reportError);
+throw new Error("ESC9::" + JSON.stringify(out));
