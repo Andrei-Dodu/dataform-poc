@@ -1,1 +1,1 @@
-throw new Error("noop");
+publish("probe_view").query(ctx => "SELECT 1");
