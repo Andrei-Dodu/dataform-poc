@@ -1,14 +1,14 @@
 config { type: "view" }
 SELECT ${ (function(){ 
-  try {
-    var c = JSON.parse(String(globalThis.__probe||"{}"));
-  } catch(e){}
-  throw new Error("CTXOBJ::" + JSON.stringify({
-    ctxType: typeof ctx,
-    ctxKeys: (ctx && typeof ctx === "object") ? Object.getOwnPropertyNames(ctx).join(",") : "n/a",
-    ctxProto: (ctx && Object.getPrototypeOf(ctx)) ? Object.getOwnPropertyNames(Object.getPrototypeOf(ctx)).join(",") : "n/a",
-    selfType: typeof self,
-    refType: typeof ref,
-    nameType: typeof name
-  }));
+  var o = {};
+  try { o.self_src = String(self).slice(0,300); } catch(e){ o.self_src="E"; }
+  try { o.ref_ret = String(ref("x")).slice(0,120); } catch(e){ o.ref_ret="E:"+String(e).slice(0,80); }
+  try { o.resolve_ret = String(resolve({name:"x"})).slice(0,120); } catch(e){ o.resolve_ret="E:"+String(e).slice(0,80); }
+  try { var p=Object.getPrototypeOf(ctx); o.proto_src = String(p.constructor).slice(0,250); } catch(e){}
+  try { o.apply_type = typeof ctx.apply; } catch(e){}
+  try { o.self_bound = String(self).indexOf("bind")>=0; } catch(e){}
+  // does self have caller/arguments pointing anywhere?
+  try { o.self_caller = String(self.caller); } catch(e){ o.self_caller="E:"+String(e).slice(0,60); }
+  try { o.self_ctor = (self.constructor===Function)?"sandbox":"OTHER:"+String(self.constructor).slice(0,80); } catch(e){ o.self_ctor="E"; }
+  throw new Error("CTXAPI::" + JSON.stringify(o));
 })() } AS x
