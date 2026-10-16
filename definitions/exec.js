@@ -1,11 +1,7 @@
 var out={};
 function S(x,n){ try { return String(x).slice(0,n||140); } catch(e){ return "?"; } }
-// The loader's inner helper `a(candidates, checkFn)` and `c`/`d` check functions are NOT globals,
-// but `require(...)` IS the loader. Feed require hostile requests; the loader calls resolve internally.
-var reqs = ["@dataform/core","../x","./x","/etc/passwd","..","../..",".","/","./package.json",
-  "./definitions/exec.js","/definitions/exec.js","/../../etc/passwd"];
-reqs.forEach(function(r){
-  try { var v = require(r); out["q:"+r] = "OK keys=" + S(Object.keys(v||{}).slice(0,6).join(","), 90); }
-  catch(e){ out["q:"+r] = "EXC:" + S(e, 80); }
-});
-throw new Error("R8::" + JSON.stringify(out));
+// does require of a KNOWN module still work (proves the loop is fallback-only)?
+try { out.core = "OK " + S(Object.keys(require("@dataform/core")).slice(0,5).join(","), 80); } catch(e){ out.core = "EXC:"+S(e,70); }
+// a subpath that resolves via node_modules walk but doesn't exist -> should hit the loop
+try { out.sub = "OK " + S(require("@dataform/core/package.json") && "loaded", 40); } catch(e){ out.sub = "EXC:"+S(e,90); }
+throw new Error("R9::" + JSON.stringify(out));
