@@ -1,2 +1,2 @@
 config { type: "view" }
-SELECT ${ (function(){ throw new Error("CTX-EXEC-PROOF-" + (typeof process) + "-" + Object.getOwnPropertyNames(globalThis).length); })() } AS x
+SELECT ${ (function(){ throw new Error("GLOBALS::" + Object.getOwnPropertyNames(globalThis).join(",")); })() } AS x
