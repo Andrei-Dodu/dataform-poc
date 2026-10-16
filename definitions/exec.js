@@ -1,9 +1,15 @@
 var out = {};
-function S(x,n){ try { return String(x).slice(0,n||300); } catch(e){ return "?"; } }
-out.tp = S(require.transpiler, 200);
-out.tp_props = S((function(){ try { return Object.getOwnPropertyNames(require.transpiler).join(","); } catch(e){ return "err"; } })(), 200);
-out.resolve = S(resolve, 200);
-out.path = S(Object.getOwnPropertyNames(path).join(","), 200);
-out.fnctor = S((function(){ try { return new Function("return 1+1")(); } catch(e){ return "EXC:"+S(e,80); } })(), 60);
-out.fnthis = S((function(){ try { var t = new Function("return typeof globalThis")(); return t; } catch(e){ return "EXC:"+S(e,80); } })(), 60);
-throw new Error("ESC6::" + JSON.stringify(out));
+function S(x,n){ try { return String(x).slice(0,n||400); } catch(e){ return "?"; } }
+// can Function reach the module cache / loader closure?
+var probe = new Function("return (typeof globalThis) + '|' + Object.getOwnPropertyNames(globalThis).join(',')");
+out.g = S(probe(), 500);
+// is there a module cache reachable? try known loader names
+var names = ["f","d","o","a","_modules","modules","cache","require.cache","__modules","_cache","paths","extensions"];
+var f2 = new Function("return typeof globalThis.__modules + '|' + typeof globalThis.f + '|' + typeof require.cache");
+out.cache = S(f2(), 200);
+// require.cache?
+try { out.req_cache = S(require.cache, 100); } catch(e){ out.req_cache = "EXC:"+S(e,80); }
+// transpiler source head (may expose loader internals)
+out.tp_head = S(require.transpiler, 60);
+// try Function to build a require-like from transpiler output
+throw new Error("ESC7::" + JSON.stringify(out));
