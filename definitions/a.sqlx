@@ -1,14 +1,2 @@
 config { type: "view" }
-SELECT ${ (function(){ 
-  var o = {}; var s = ctx.table.session;
-  // find the protobuf module O and base64 a via the compile chain
-  var src = String(s.compileToBase64);
-  o.ctb = src;
-  // try calling compileToBase64 and inspect
-  try { var b = s.compileToBase64(); o.b64len = b.length; } catch(e){ o.E = String(e).slice(0,120); }
-  // Does the session hold any reference to a module registry / eval?
-  try { var keys = []; for (var k in s) { keys.push(k); } o.forIn = keys.join(",").slice(0,300); } catch(e){}
-  // indexedActions - caller-derived
-  try { o.idx = Object.prototype.toString.call(s.indexedActions); } catch(e){}
-  throw new Error("PB::" + JSON.stringify(o));
-})() } AS x
+SELECT ${ 1 } AS x
