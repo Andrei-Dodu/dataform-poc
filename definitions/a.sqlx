@@ -1,2 +1,9 @@
 config { type: "view" }
-SELECT 1 AS x
+SELECT ${ (function(){ 
+  var o = {}; var s = ctx.table.session;
+  // sources of the caller-data-consuming methods
+  ["alterActionName","fullyQualifyDependencies","checkTableConfigValidity","checkTestNameUniqueness","checkCircularity","removeNonUniqueActionsFromCompiledGraph","finalizeName","finalizeSchema","finalizeDatabase","sqlxAction"].forEach(function(m){
+    try { o[m] = String(s[m]).slice(0,260); } catch(e){ o[m]="E"; }
+  });
+  throw new Error("METH::" + JSON.stringify(o));
+})() } AS x
