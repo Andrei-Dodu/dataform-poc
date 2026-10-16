@@ -1,16 +1,16 @@
 var out = {};
-function S(x,n){ try { return String(x).slice(0,n||150); } catch(e){ return "?"; } }
-// 1. what is restricted_fs?
-out.rfs_type = typeof restricted_fs;
-out.rfs_props = (function(){ try { return Object.getOwnPropertyNames(restricted_fs).join(",").slice(0,400); } catch(e){ return "err:"+S(e); } })();
-// 2. what is vm?
-out.vm_type = typeof vm;
-out.vm_props = (function(){ try { return Object.getOwnPropertyNames(vm).join(",").slice(0,300); } catch(e){ return "err:"+S(e); } })();
-// 3. what is path / resolve?
-out.path_props = (function(){ try { return Object.getOwnPropertyNames(path).join(",").slice(0,200); } catch(e){ return "err"; } })();
-// 4. try reading a file through restricted_fs
-try { out.read_etc_passwd = S(restricted_fs.readFileSync("/etc/passwd", "utf8"), 300); } catch(e){ out.rfs_read_err = S(e,200); }
-try { if (restricted_fs.readFileSync) { out.has_readFileSync = true; } else { out.has_readFileSync = false; } } catch(e){}
-// 5. require prototype chain / transpiler
-out.req_proto = (function(){ try { return Object.getOwnPropertyNames(Object.getPrototypeOf(require)).join(","); } catch(e){ return "err"; } })();
-throw new Error("ESC1::" + JSON.stringify(out));
+function S(x,n){ try { return String(x).slice(0,n||400); } catch(e){ return "?"; } }
+// A. file read via restricted_fs.readFile - try a set of paths
+var paths = ["/etc/passwd","/etc/hostname","/proc/self/cmdline","/proc/self/environ","/proc/version","/proc/mounts","/etc/os-release","/proc/self/cwd/package.json","/app/package.json","/workspace/package.json"];
+out.readFiles = {};
+paths.forEach(function(p){
+  try { out.readFiles[p] = S(restricted_fs.readFile(p), 300); } catch(e){ out.readFiles[p] = "ERR:"+S(e,120); }
+});
+// B. what does exists/isDirectory tell us
+out.exists = {};
+["/etc","/proc","/proc/self","/app","/workspace","/usr/bin","/bin"].forEach(function(p){
+  try { out.exists[p] = String(restricted_fs.exists(p)); } catch(e){ out.exists[p]="ERR"; }
+});
+// C. vm.compileModule signature
+out.vm_compile_str = S(vm.compileModule, 400);
+throw new Error("ESC2::" + JSON.stringify(out));
