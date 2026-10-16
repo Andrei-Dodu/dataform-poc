@@ -1,0 +1,2 @@
+config { type: "view" }
+SELECT 1
