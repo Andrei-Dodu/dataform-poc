@@ -1,0 +1,2 @@
+globalThis.__SIDEEFFECT = "RAW-JS-EXECUTED-FROM-SQLX-FILE";
+module.exports = 1;

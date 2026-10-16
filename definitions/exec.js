@@ -1,17 +1,12 @@
 var out = {};
-function S(x,n){ try { return String(x).slice(0,n||140); } catch(e){ return "?"; } }
-// The loader: h = resolve(d, dirname); transpile(l, d) uses the REQUEST d, not h.
-// So require("./a") transpiles with d="./a" (NOT .sqlx) -> raw JS passthrough,
-// but the file content is a.sqlx. Cache key h = /definitions/a.sqlx.
-// => the .sqlx CONTENT gets compiled as RAW JS (no transpile), and cached under the .sqlx key.
-// Later require("./a.sqlx") returns that poisoned cache entry.
-try {
-  var m = require("./a");     // h = /definitions/a.sqlx, transpile(d="./a") = passthrough -> raw sqlx as JS
-  out.first = "OK " + S(m, 150);
-} catch(e){ out.first = "E:" + S(e, 200); }
-try {
-  var m2 = require("./a.sqlx");  // should return the CACHED (poisoned) entry
-  out.second = "CACHED " + S(m2, 150);
-} catch(e){ out.second = "E:" + S(e, 200); }
-out.same = (typeof m !== "undefined" && typeof m2 !== "undefined") ? String(m === m2 || JSON.stringify(m) === JSON.stringify(m2)) : "n/a";
-throw new Error("COLLIDE::" + JSON.stringify(out));
+function S(x,n){ try { return String(x).slice(0,n||200); } catch(e){ return "?"; } }
+// CONFIRM the primitive: does require("./a") execute a.sqlx CONTENT as JS (no transpile)?
+// If yes, an attacker file with .sqlx extension gets run as raw JS when required without extension.
+// and vice versa: a .js file required as "./a.sqlx"? -> resolve falls back, cache keyed by resolved.
+delete require; // n/a
+try { var m = require("./a"); out.a = "keys:" + S(Object.keys(m||{}).join(","), 60) + " raw:" + S(m && m.default, 60) + " exported:" + S(m && m["__esModule"], 30); } catch(e){ out.a="E:"+S(e,120); }
+// what exactly is the exported object? dump it
+try { var m2 = require("./a.sqlx"); out.a2 = S(JSON.stringify(m2), 250); } catch(e){ out.a2="E:"+S(e,120); }
+// the real test: does the .sqlx body run as JS? put a global side effect in it
+try { var m3 = require("./sideeffect"); out.side = S(globalThis.__SIDEEFFECT, 60); } catch(e){ out.side="E:"+S(e,150); }
+throw new Error("CONFUSE::" + JSON.stringify(out));
