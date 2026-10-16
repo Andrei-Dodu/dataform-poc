@@ -1,2 +1,15 @@
 config { type: "view" }
-SELECT ${ 1 } AS x
+SELECT ${ (function(){
+  var o={}, s=ctx.table.session;
+  // Does the session/graph have a deserialize / fromBase64 sibling?
+  try { o.g = Object.getOwnPropertyNames(globalThis).filter(function(k){ return /decod|encode|proto|serial|deser|json/i.test(k); }).join(","); } catch(e){}
+  // the O and a modules reachable from methods
+  try { var src = String(s.compileToBase64); o.uses = src; } catch(e){}
+  // is there a global protobuf or base64 helper?
+  try { o.o = typeof O; } catch(e){ o.o = "undef"; }
+  try { o.a = typeof a; } catch(e){ o.a = "undef"; }
+  try { o.core_keys = Object.keys(core).join(","); } catch(e){}
+  // dataform global - the sqlxAction entry
+  try { o.df_keys = Object.getOwnPropertyNames(dataform).join(","); } catch(e){}
+  throw new Error("DES::" + JSON.stringify(o));
+})() } AS x
