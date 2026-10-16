@@ -2,12 +2,13 @@ config { type: "view" }
 SELECT ${ (function(){ 
   var o = {};
   var s = ctx.table.session;
-  // source of the interesting methods
-  ["compileToBase64","compile","compileGraphChunk","resolve","finalizeDatabase"].forEach(function(m){
-    try { o[m] = String(s[m]).slice(0,220); } catch(e){ o[m]="E"; }
-  });
-  // is there anything in the session referencing host/fs/net?
-  try { o.projCfg = JSON.stringify(s.projectConfig).slice(0,200); } catch(e){}
-  try { o.rootDir = String(s.rootDir); } catch(e){}
-  throw new Error("SM::" + JSON.stringify(o));
+  // get the compiled graph (runs the full compiler) and inspect its shape
+  try {
+    var g = s.compile();
+    o.graph_keys = Object.getOwnPropertyNames(g).join(",").slice(0,400);
+    o.graph_json = JSON.stringify(g).slice(0,600);
+  } catch(e){ o.compileE = String(e).slice(0,200); }
+  // base64 form
+  try { var b = s.compileToBase64(); o.b64_len = b.length; o.b64_head = String(b).slice(0,80); } catch(e){ o.b64E=String(e).slice(0,150); }
+  throw new Error("GRAPH::" + JSON.stringify(o));
 })() } AS x
