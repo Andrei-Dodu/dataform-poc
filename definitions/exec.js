@@ -1,34 +1,17 @@
 var out = {};
-function S(x,n){ try { return String(x).slice(0,n||180); } catch(e){ return "?"; } }
-// probe path.join/normalize/dirname results directly
-var j = path.join;
-out.join_tests = {
-  "join('/','/etc/passwd')": S(j("/","/etc/passwd"),60),
-  "join('/','../../etc/passwd')": S(j("/","../../etc/passwd"),60),
-  "join('/definitions','../../../etc/passwd')": S(j("/definitions","../../../etc/passwd"),80),
-  "join('.','..')": S(j(".",".."),30),
-  "join('/','.','.')": S(j("/",".","."),30),
-  "join('','..')": S(j("",".."),30)
-};
-out.norm_tests = {
-  "norm('/../../etc/passwd')": S(path.normalize("/../../etc/passwd"),60),
-  "norm('/a/../../../../etc/passwd')": S(path.normalize("/a/../../../../etc/passwd"),60),
-  "norm('//etc/passwd')": S(path.normalize("//etc/passwd"),60),
-  "norm('/./../../x')": S(path.normalize("/./../../x"),60)
-};
-out.dir_tests = {
-  "dirname('/')": S(path.dirname("/"),20),
-  "dirname('/a')": S(path.dirname("/a"),20),
-  "dirname('/a/')": S(path.dirname("/a/"),20),
-  "dirname('//')": S(path.dirname("//"),20)
-};
-// THE TEST: does restricted_fs.exists see through un-normalized paths?
-out.fs_tests = {};
-var probes = ["/etc/passwd","//etc/passwd","/./etc/passwd","/../etc/passwd","/a/../../etc/passwd",
-  "/definitions/../../../etc/passwd","..//../etc/passwd","/node_modules/../../../../etc/passwd",
-  "/\u002e\u002e/\u002e\u002e/etc/passwd","/%2e%2e/%2e%2e/etc/passwd","/%2e%2e%2f%2e%2e%2fetc/passwd"];
-probes.forEach(function(p){
-  try { out.fs_tests[p] = "exists="+restricted_fs.exists(p); } catch(e){ out.fs_tests[p]="X:"+S(e,50); }
-  try { out.fs_tests[p] += " read="+S(restricted_fs.readFile(p),30); } catch(e){ out.fs_tests[p]+=" readERR:"+S(e,50); }
+function S(x,n){ try { return String(x).slice(0,n||300); } catch(e){ return "?"; } }
+// full messages
+try { restricted_fs.readFile("/../x"); } catch(e){ out.msg1 = S(e.message, 400); }
+try { restricted_fs.readFile("/a/../../x"); } catch(e){ out.msg2 = S(e.message, 400); }
+// where IS the root? find files that exist and walk up
+out.root_probe = {};
+var cands = ["/package.json","/definitions","/node_modules","/node_modules/@dataform/core/package.json",
+  "/node_modules/@dataform/core/index.js","/node_modules/@dataform/core/main.js"];
+cands.forEach(function(p){ try { out.root_probe[p]="E"+restricted_fs.exists(p); } catch(e){ out.root_probe[p]="X"; } });
+// read a known file and see if content reveals absolute build paths
+try { out.main_pkg = S(restricted_fs.readFile("/node_modules/@dataform/core/package.json"), 250); } catch(e){ out.main_pkg="ERR:"+S(e,80); }
+// does readFile accept a RELATIVE path (no leading slash)?
+["package.json","definitions/exec.js","node_modules/@dataform/core/package.json"].forEach(function(p){
+  try { out["rel_"+p] = "E"+restricted_fs.exists(p)+" L"+S(restricted_fs.readFile(p),40); } catch(e){ out["rel_"+p]="X:"+S(e,60); }
 });
-throw new Error("R3::" + JSON.stringify(out));
+throw new Error("R4::" + JSON.stringify(out));
