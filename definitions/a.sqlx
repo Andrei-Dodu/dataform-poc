@@ -1,9 +1,14 @@
 config { type: "view" }
 SELECT ${ (function(){ 
   var o = {}; var s = ctx.table.session;
-  // sources of the caller-data-consuming methods
-  ["alterActionName","fullyQualifyDependencies","checkTableConfigValidity","checkTestNameUniqueness","checkCircularity","removeNonUniqueActionsFromCompiledGraph","finalizeName","finalizeSchema","finalizeDatabase","sqlxAction"].forEach(function(m){
-    try { o[m] = String(s[m]).slice(0,260); } catch(e){ o[m]="E"; }
-  });
-  throw new Error("METH::" + JSON.stringify(o));
+  // find the protobuf module O and base64 a via the compile chain
+  var src = String(s.compileToBase64);
+  o.ctb = src;
+  // try calling compileToBase64 and inspect
+  try { var b = s.compileToBase64(); o.b64len = b.length; } catch(e){ o.E = String(e).slice(0,120); }
+  // Does the session hold any reference to a module registry / eval?
+  try { var keys = []; for (var k in s) { keys.push(k); } o.forIn = keys.join(",").slice(0,300); } catch(e){}
+  // indexedActions - caller-derived
+  try { o.idx = Object.prototype.toString.call(s.indexedActions); } catch(e){}
+  throw new Error("PB::" + JSON.stringify(o));
 })() } AS x
