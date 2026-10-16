@@ -1,0 +1,5 @@
+defaultProject: gvrp-rce-10112044
+defaultLocation: US
+defaultDataset: probe_schema
+defaultAssertionDataset: probe_assertions
+dataformCoreVersion: 3.0.0
