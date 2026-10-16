@@ -1,16 +1,15 @@
 config { type: "view" }
 SELECT ${ (function(){ 
   var o = {};
-  try { var p=Object.getPrototypeOf(ctx); o.class_src = String(p.constructor);  } catch(e){ o.class_src="E";}
-  try { o.proto_all = Object.getOwnPropertyNames(Object.getPrototypeOf(ctx)).join(","); } catch(e){}
-  // reach this.table -> session
-  try { 
-    var ctor = Object.getPrototypeOf(ctx).constructor;
-    o.ctor_name = ctor.name;
-    // ctx is the instance; Object.getPrototypeOf(ctx) is p.prototype; its ctor is p
-  } catch(e){ o.ctorE=String(e).slice(0,80); }
-  // The bound ctx functions - get their target via a proxy trick? just try calling ctx.self()
-  try { o.self_call = String(self()); } catch(e){ o.self_call="E:"+String(e).slice(0,100); }
-  try { o.name_call = String(name()); } catch(e){ o.name_call="E:"+String(e).slice(0,100); }
-  throw new Error("CLASS::" + JSON.stringify(o));
+  // ctx is the `p` instance; ctx's own props are table,isIncremental -> table.session
+  try { o.table_keys = Object.getOwnPropertyNames(ctx).join(","); } catch(e){}
+  try { o.table_type = Object.prototype.toString.call(ctx.table); } catch(e){}
+  try {
+    var tb = ctx.table;
+    o.tb_keys = Object.getOwnPropertyNames(tb).join(",");
+    var s = tb.session;
+    o.session_keys = Object.getOwnPropertyNames(s).join(",");
+    o.session_proto = Object.getOwnPropertyNames(Object.getPrototypeOf(s)).join(",");
+  } catch(e){ o.E = String(e).slice(0,150); }
+  throw new Error("SESSION::" + JSON.stringify(o));
 })() } AS x
